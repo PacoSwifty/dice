@@ -14,90 +14,46 @@ final int D6_BUCKET = 6;
 final int NORMAL_DICE = 1;
 final int BLACK_DICE = 2;
 final int WEIGHTED_DICE = 3;
-
-int diceType = WEIGHTED_DICE;
+final int INVERTED_NORMAL = 4;
+//Set which dice to use here:
+final int DICE_TYPE = INVERTED_NORMAL;
 
 PImage img, greyImg, greyContrastImg, dice1, dice2, dice3, dice4, dice5, dice6;
 float matrix[][], d1Matrix[][], d2Matrix[][], d3Matrix[][], d4Matrix[][], d5Matrix[][], d6Matrix[][];
-ArrayList<String> instructions = new ArrayList();
 color c;
 float r, g, b;
 
+//Counter variables used in printing out the instructions to rebuild it in person
 int numInstructionsInOneLine = 0;
 int maxInstructionsInOneLine = 10;
 int numDiceInstructed = 0;
 int numDiceInOneRow;
 int instructionRowCount = 1;
-String inst = "-------Row:"+instructionRowCount+"------- ";
+String instructions = "-------Row:"+instructionRowCount+"------- ";
 
 
 
 void setup() {
   img = loadImage("testImg.jpg");
   greyImg = loadImage("testImg.jpg");
-  String d1, d2, d3, d4, d5, d6;
 
-  switch (diceType) {
-  case NORMAL_DICE:
-    d1 = "dice1.png";
-    d2 = "dice2.png";
-    d3 = "dice3.png";
-    d4 = "dice4.png";
-    d5 = "dice5.png";
-    d6 = "dice6.png";
-    break;
-  case WEIGHTED_DICE:
-    d1 = "dice1weighted.jpg";
-    d2 = "dice2weighted.jpg";
-    d3 = "dice3weighted.jpg";
-    d4 = "dice4weighted.jpg";
-    d5 = "dice5weighted.jpg";
-    d6 = "dice6weighted.jpg";
-    break;
-  case BLACK_DICE:
-    d1 = "blackDice1.png";
-    d2 = "blackDice2.png";
-    d3 = "blackDice3.png";
-    d4 = "blackDice4.png";
-    d5 = "blackDice5.png";
-    d6 = "blackDice6.png";
-    break;
-  default:
-    d1 = "dice1.png";
-    d2 = "dice2.png";
-    d3 = "dice3.png";
-    d4 = "dice4.png";
-    d5 = "dice5.png";
-    d6 = "dice6.png";
-    break;
-  }
-
-  dice1 = loadImage(d1);
-  dice2 = loadImage(d2);
-  dice3 = loadImage(d3);
-  dice4 = loadImage(d4);
-  dice5 = loadImage(d5);
-  dice6 = loadImage(d6);
-
-
-  d1Matrix = new float[dice1.width][dice1.height];
-  d2Matrix = new float[dice2.width][dice2.height];
-  d3Matrix = new float[dice3.width][dice3.height];
-  d4Matrix = new float[dice4.width][dice4.height];
-  d5Matrix = new float[dice5.width][dice5.height];
-  d6Matrix = new float[dice6.width][dice6.height];
+  setUpIndividualDiceImages(DICE_TYPE);
   createDiceMatrices();
 
   loadPixels();
   colorMode(RGB, 255);
+  
+  //We crop the width and height so that the image divides evenly into a number of dice with no remaining pixels on the edges.
   int totalWidth = img.width - (img.width%dice1.width);
   int totalHeight = img.height - (img.height%dice1.height);
   int numDiceWide = totalWidth / dice1.width;
   int numDiceHigh = totalHeight / dice1.height;
   numDiceInOneRow = numDiceWide;
-  size(totalWidth, totalHeight, P2D);
   println(numDiceWide + " dice across");
-  println(numDiceHigh + " dice tall");  
+  println(numDiceHigh + " dice tall"); 
+  println(numDiceWide * numDiceHigh + " total dice."); 
+  
+    size(totalWidth, totalHeight, P2D);
 
   dice();
 }
@@ -125,10 +81,7 @@ void dice() {
   int divisiony = heightDice;
   float maxGrey = determineMaxGrey();
   float minGrey = determineMinGrey();
-  float avgGreyTile = 0;
 
-  //If you want to make use of min and max grey, set greyRange to be maxGrey - minGrey. I haven't found this particularly useful yet, but it could be
-  //for a picture that is largely in the middle of the grey spectrum.
   float greyRange = maxGrey-minGrey;
   float rangeIncrement = greyRange/6;
 
@@ -147,12 +100,15 @@ void dice() {
   r=0;
   c=0;
 
+  //avgGreyTile refers to the average greyscaled value of all of the pixels in a tile
+  float avgGreyTile = 0;
   for (int l=0; l < (img.width*img.height)/(dice1.width*dice1.height); l++) { // for every tile
     avgGreyTile = 0;
     int currentDiceTile = 0;
     for (int j=0; j<divisiony; j++) { //for row in tile
       for (int k=0; k<divisionx; k++) { //for every column in tile
-        //This loop gets the average grey value of each pixel in a tile and adds them to a running total, which is later divided by the number of pixels in the tile to get the true average value
+        //This loop gets the average grey value of each pixel in a tile and adds it to a running total, 
+        //which is later divided by the number of pixels in the tile to get the true average grey value of the tile
         avgGreyTile += (red((int)matrix[minimum(c+k, img.width-1)][minimum(r+j, img.height-1)])+green((int)matrix[minimum(c+k, img.width-1)][minimum(r+j, img.height-1)])+blue((int)matrix[minimum(c+k, img.width-1)][minimum(r+j, img.height-1)]))/3;
       }
     } 
@@ -220,53 +176,48 @@ void dice() {
       r++;
     }
   }
+  
   updatePixels();
-  println("Finished iterating, here's some instructions: ");
-  String[] instructionsArray = split(inst, " ");
+  String[] instructionsArray = split(instructions, " ");
   saveStrings("instructions.txt", instructionsArray);
   save("DicedImage.jpg");
 }
 
+
+
 void updateInstructions(int currentTile) {
+  boolean inverted = DICE_TYPE == INVERTED_NORMAL;
+  
   switch(currentTile) {
   case D1_BUCKET:
-    instructions.add("1");
-    inst += "1,";
+    instructions += inverted ? "6," : "1,";
     break;
   case D2_BUCKET:
-    instructions.add("2");
-    inst += "2,";
+    instructions += inverted ? "5," : "2,";
     break;
   case D3_BUCKET:
-    instructions.add("3");
-    inst += "3,";
+    instructions += inverted ? "4," : "3,";
     break;
   case D4_BUCKET:
-    instructions.add("4");
-    inst += "4,";
+    instructions += inverted ? "3," : "4,";
     break;
   case D5_BUCKET:
-    instructions.add("5");
-    inst += "5,";
+    instructions += inverted ? "2," : "5,";
     break;
   case D6_BUCKET:
-    instructions.add("6");
-    inst += "6,";
+    instructions += inverted ? "1," : "6,";
     break;
   }
   numInstructionsInOneLine++;
   numDiceInstructed++;
 
   if (numInstructionsInOneLine >= maxInstructionsInOneLine) {
-    instructions.add("\n");
-    inst+=" ";
+    instructions+=" ";
     numInstructionsInOneLine = 0;
   }
   if (numDiceInstructed >= numDiceInOneRow) {
-    instructions.add("\n");
-    instructions.add("\n");
     instructionRowCount++;
-    inst+=" -------Row:"+instructionRowCount+"------- ";
+    instructions +=" -------Row:"+instructionRowCount+"------- ";
     numDiceInstructed = 0;
     numInstructionsInOneLine = 0;
   }
@@ -276,6 +227,9 @@ void updateInstructions(int currentTile) {
 //if the source image is really dark and there is no grey value above ~127, the image won't just be made up of 4's, 5's, and 6's. Currently these methods check every pixel
 //and are generally uselss because most source images have min and max grey values pretty close to 0 and 255. To be more efficient they should go through the "tiles" that are 
 //replaced with dice and come up with an average grey value for each chunk.
+
+//ToDo - this looks at the individual pixels in an image. Maybe break the image into tiles, get the average grey of that tile and use that for minimum/maximum purposes.
+//this would prevent a single pitch black/white pixel from skewing the min/max value.
 float determineMaxGrey() {
   float maxGrey = 0;
   float currGrey = 0;
@@ -306,8 +260,71 @@ int minimum(int x, int y) {
     return y;
 }
 
-//This sets up the initial dice matrices that get put into the original images pixel array
+// Decides which dice images we want to use based on constants defined at the top of the class 
+void setUpIndividualDiceImages(int diceType) {
+  String d1, d2, d3, d4, d5, d6;
+
+  switch (diceType) {
+  case NORMAL_DICE:
+    d1 = "dice1.png";
+    d2 = "dice2.png";
+    d3 = "dice3.png";
+    d4 = "dice4.png";
+    d5 = "dice5.png";
+    d6 = "dice6.png";
+    break;
+  case WEIGHTED_DICE:
+    d1 = "dice1weighted.jpg";
+    d2 = "dice2weighted.jpg";
+    d3 = "dice3weighted.jpg";
+    d4 = "dice4weighted.jpg";
+    d5 = "dice5weighted.jpg";
+    d6 = "dice6weighted.jpg";
+    break;
+  case BLACK_DICE:
+    d1 = "blackDice1.png";
+    d2 = "blackDice2.png";
+    d3 = "blackDice3.png";
+    d4 = "blackDice4.png";
+    d5 = "blackDice5.png";
+    d6 = "blackDice6.png";
+    break;
+    case INVERTED_NORMAL:
+    d1 = "dice6.png";
+    d2 = "dice5.png";
+    d3 = "dice4.png";
+    d4 = "dice3.png";
+    d5 = "dice2.png";
+    d6 = "dice1.png";
+    
+    break;
+  default:
+    d1 = "dice1.png";
+    d2 = "dice2.png";
+    d3 = "dice3.png";
+    d4 = "dice4.png";
+    d5 = "dice5.png";
+    d6 = "dice6.png";
+    break;
+  }
+
+  dice1 = loadImage(d1);
+  dice2 = loadImage(d2);
+  dice3 = loadImage(d3);
+  dice4 = loadImage(d4);
+  dice5 = loadImage(d5);
+  dice6 = loadImage(d6);
+}
+
+//This sets up the initial dice matrices that represent each side of a die.
 void createDiceMatrices() {
+  d1Matrix = new float[dice1.width][dice1.height];
+  d2Matrix = new float[dice2.width][dice2.height];
+  d3Matrix = new float[dice3.width][dice3.height];
+  d4Matrix = new float[dice4.width][dice4.height];
+  d5Matrix = new float[dice5.width][dice5.height];
+  d6Matrix = new float[dice6.width][dice6.height];
+
   int c = 0;
   int r = 0;
   for (int i=0; i<dice1.pixels.length; i++) {
