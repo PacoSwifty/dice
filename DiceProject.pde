@@ -16,7 +16,7 @@ final int BLACK_DICE = 2;
 final int WEIGHTED_DICE = 3;
 final int INVERTED_NORMAL = 4;
 //Set which dice to use here:
-final int DICE_TYPE = INVERTED_NORMAL;
+final int DICE_TYPE = NORMAL_DICE;
 
 PImage img, greyImg, greyContrastImg, dice1, dice2, dice3, dice4, dice5, dice6;
 float matrix[][], d1Matrix[][], d2Matrix[][], d3Matrix[][], d4Matrix[][], d5Matrix[][], d6Matrix[][];
@@ -34,12 +34,11 @@ String instructions = "-------Row:"+instructionRowCount+"------- ";
 
 
 void setup() {
-  img = loadImage("testImg.jpg");
-  greyImg = loadImage("testImg.jpg");
+  img = loadImage("images/testImg.jpg");
+  greyImg = loadImage("images/testImg.jpg");
 
   setUpIndividualDiceImages(DICE_TYPE);
   createDiceMatrices();
-
   loadPixels();
   colorMode(RGB, 255);
   
@@ -266,45 +265,45 @@ void setUpIndividualDiceImages(int diceType) {
 
   switch (diceType) {
   case NORMAL_DICE:
-    d1 = "dice1.png";
-    d2 = "dice2.png";
-    d3 = "dice3.png";
-    d4 = "dice4.png";
-    d5 = "dice5.png";
-    d6 = "dice6.png";
+    d1 = "images/dice1.png";
+    d2 = "images/dice2.png";
+    d3 = "images/dice3.png";
+    d4 = "images/dice4.png";
+    d5 = "images/dice5.png";
+    d6 = "images/dice6.png";
     break;
   case WEIGHTED_DICE:
-    d1 = "dice1weighted.jpg";
-    d2 = "dice2weighted.jpg";
-    d3 = "dice3weighted.jpg";
-    d4 = "dice4weighted.jpg";
-    d5 = "dice5weighted.jpg";
-    d6 = "dice6weighted.jpg";
+    d1 = "images/dice1weighted.jpg";
+    d2 = "images/dice2weighted.jpg";
+    d3 = "images/dice3weighted.jpg";
+    d4 = "images/dice4weighted.jpg";
+    d5 = "images/dice5weighted.jpg";
+    d6 = "images/dice6weighted.jpg";
     break;
   case BLACK_DICE:
-    d1 = "blackDice1.png";
-    d2 = "blackDice2.png";
-    d3 = "blackDice3.png";
-    d4 = "blackDice4.png";
-    d5 = "blackDice5.png";
-    d6 = "blackDice6.png";
+    d1 = "images/blackDice1.png";
+    d2 = "images/blackDice2.png";
+    d3 = "images/blackDice3.png";
+    d4 = "images/blackDice4.png";
+    d5 = "images/blackDice5.png";
+    d6 = "images/blackDice6.png";
     break;
     case INVERTED_NORMAL:
-    d1 = "dice6.png";
-    d2 = "dice5.png";
-    d3 = "dice4.png";
-    d4 = "dice3.png";
-    d5 = "dice2.png";
-    d6 = "dice1.png";
+    d1 = "images/dice6.png";
+    d2 = "images/dice5.png";
+    d3 = "images/dice4.png";
+    d4 = "images/dice3.png";
+    d5 = "images/dice2.png";
+    d6 = "images/dice1.png";
     
     break;
   default:
-    d1 = "dice1.png";
-    d2 = "dice2.png";
-    d3 = "dice3.png";
-    d4 = "dice4.png";
-    d5 = "dice5.png";
-    d6 = "dice6.png";
+    d1 = "images/dice1.png";
+    d2 = "images/dice2.png";
+    d3 = "images/dice3.png";
+    d4 = "images/dice4.png";
+    d5 = "images/dice5.png";
+    d6 = "images/dice6.png";
     break;
   }
 
