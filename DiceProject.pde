@@ -41,7 +41,7 @@ void setup() {
   createDiceMatrices();
   loadPixels();
   colorMode(RGB, 255);
-  
+
   //We crop the width and height so that the image divides evenly into a number of dice with no remaining pixels on the edges.
   int totalWidth = img.width - (img.width%dice1.width);
   int totalHeight = img.height - (img.height%dice1.height);
@@ -51,8 +51,8 @@ void setup() {
   println(numDiceWide + " dice across");
   println(numDiceHigh + " dice tall"); 
   println(numDiceWide * numDiceHigh + " total dice."); 
-  
-    size(totalWidth, totalHeight, P2D);
+
+  size(totalWidth, totalHeight, P2D);
 
   dice();
 }
@@ -175,7 +175,7 @@ void dice() {
       r++;
     }
   }
-  
+
   updatePixels();
   String[] instructionsArray = split(instructions, " ");
   saveStrings("instructions.txt", instructionsArray);
@@ -186,7 +186,7 @@ void dice() {
 
 void updateInstructions(int currentTile) {
   boolean inverted = DICE_TYPE == INVERTED_NORMAL;
-  
+
   switch(currentTile) {
   case D1_BUCKET:
     instructions += inverted ? "6," : "1,";
@@ -288,14 +288,14 @@ void setUpIndividualDiceImages(int diceType) {
     d5 = "images/blackDice5.png";
     d6 = "images/blackDice6.png";
     break;
-    case INVERTED_NORMAL:
+  case INVERTED_NORMAL:
     d1 = "images/dice6.png";
     d2 = "images/dice5.png";
     d3 = "images/dice4.png";
     d4 = "images/dice3.png";
     d5 = "images/dice2.png";
     d6 = "images/dice1.png";
-    
+
     break;
   default:
     d1 = "images/dice1.png";
