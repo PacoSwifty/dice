@@ -29,7 +29,7 @@ final int DICE_TYPE = NORMAL_DICE;
 //If an image is heavily light/dark, use this to give more detail to light/dark areas
 final boolean weightedBuckets = false;
 
-PImage img, greyImg, greyContrastImg, dice1, dice2, dice3, dice4, dice5, dice6;
+PImage img, dice1, dice2, dice3, dice4, dice5, dice6;
 float matrix[][], d1Matrix[][], d2Matrix[][], d3Matrix[][], d4Matrix[][], d5Matrix[][], d6Matrix[][];
 color c;
 float r, g, b;
@@ -46,8 +46,7 @@ String instructions = "-------Row:"+instructionRowCount+"------- ";
 
 
 void setup() {
-  img = loadImage("images/testImg.jpg");
-  greyImg = loadImage("images/testImg.jpg");
+  img = loadImage("images/source.jpg");
 
   setUpIndividualDiceImages(DICE_TYPE);
   createDiceMatrices();
@@ -235,7 +234,7 @@ void determineGreys() {
   float greyCount = 0;
 
   for (int i = 0; i < img.width*img.height; i++) {
-    currGrey = (red(greyImg.pixels[i])+green(greyImg.pixels[i])+blue(greyImg.pixels[i]))/3;
+    currGrey = (red(img.pixels[i])+green(img.pixels[i])+blue(img.pixels[i]))/3;
     if (currGrey<minGrey) {
       minGrey=(float)currGrey;
     }
