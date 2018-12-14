@@ -11,17 +11,29 @@ final int D4_BUCKET = 4;
 final int D5_BUCKET = 5;
 final int D6_BUCKET = 6;
 
+//used for analytics
+int D1count = 0;
+int D2count = 0;
+int D3count = 0;
+int D4count = 0;
+int D5count = 0;
+int D6count = 0;
+
 final int NORMAL_DICE = 1;
 final int BLACK_DICE = 2;
 final int WEIGHTED_DICE = 3;
 final int INVERTED_NORMAL = 4;
 //Set which dice to use here:
-final int DICE_TYPE = INVERTED_NORMAL;
+final int DICE_TYPE = NORMAL_DICE;
+
+//If an image is heavily light/dark, use this to give more detail to light/dark areas
+final boolean weightedBuckets = false;
 
 PImage img, greyImg, greyContrastImg, dice1, dice2, dice3, dice4, dice5, dice6;
 float matrix[][], d1Matrix[][], d2Matrix[][], d3Matrix[][], d4Matrix[][], d5Matrix[][], d6Matrix[][];
 color c;
 float r, g, b;
+float minGrey, maxGrey, avgGrey;
 
 //Counter variables used in printing out the instructions to rebuild it in person
 int numInstructionsInOneLine = 0;
@@ -34,15 +46,14 @@ String instructions = "-------Row:"+instructionRowCount+"------- ";
 
 
 void setup() {
-  img = loadImage("testImg.jpg");
-  greyImg = loadImage("testImg.jpg");
+  img = loadImage("images/testImg.jpg");
+  greyImg = loadImage("images/testImg.jpg");
 
   setUpIndividualDiceImages(DICE_TYPE);
   createDiceMatrices();
-
   loadPixels();
   colorMode(RGB, 255);
-  
+
   //We crop the width and height so that the image divides evenly into a number of dice with no remaining pixels on the edges.
   int totalWidth = img.width - (img.width%dice1.width);
   int totalHeight = img.height - (img.height%dice1.height);
@@ -52,8 +63,8 @@ void setup() {
   println(numDiceWide + " dice across");
   println(numDiceHigh + " dice tall"); 
   println(numDiceWide * numDiceHigh + " total dice."); 
-  
-    size(totalWidth, totalHeight, P2D);
+
+  size(totalWidth, totalHeight, P2D);
 
   dice();
 }
@@ -79,11 +90,8 @@ void dice() {
   int heightDice = dice1.height;
   int divisionx = widthDice;
   int divisiony = heightDice;
-  float maxGrey = determineMaxGrey();
-  float minGrey = determineMinGrey();
 
-  float greyRange = maxGrey-minGrey;
-  float rangeIncrement = greyRange/6;
+  determineGreys();
 
   int c=0;
   int r=0;
@@ -115,19 +123,7 @@ void dice() {
     avgGreyTile=avgGreyTile/(widthDice*heightDice);
 
     //Decide which side of the die this tile should be:
-    if (avgGreyTile <= rangeIncrement) {
-      currentDiceTile = D6_BUCKET;
-    } else if (avgGreyTile <= 2*rangeIncrement && avgGreyTile > rangeIncrement) {
-      currentDiceTile = D5_BUCKET;
-    } else if (avgGreyTile <= 3*rangeIncrement && avgGreyTile > 2*rangeIncrement) {
-      currentDiceTile = D4_BUCKET;
-    } else if (avgGreyTile <= 4*rangeIncrement && avgGreyTile > 3*rangeIncrement) {
-      currentDiceTile = D3_BUCKET;
-    } else if (avgGreyTile <= 5*rangeIncrement && avgGreyTile > 4*rangeIncrement) {
-      currentDiceTile = D2_BUCKET;
-    } else {
-      currentDiceTile = D1_BUCKET;
-    }
+    currentDiceTile = determineBucket(avgGreyTile);
 
     updateInstructions(currentDiceTile);
 
@@ -176,7 +172,8 @@ void dice() {
       r++;
     }
   }
-  
+
+  println("Tile Counts: \n"+"D1: " + D1count + "\nD2: "+ D2count + "\nD3: "+ D3count + "\nD4: "+ D4count + "\nD5: " + D5count + "\nD6: " + D6count);
   updatePixels();
   String[] instructionsArray = split(instructions, " ");
   saveStrings("instructions.txt", instructionsArray);
@@ -187,7 +184,7 @@ void dice() {
 
 void updateInstructions(int currentTile) {
   boolean inverted = DICE_TYPE == INVERTED_NORMAL;
-  
+
   switch(currentTile) {
   case D1_BUCKET:
     instructions += inverted ? "6," : "1,";
@@ -230,26 +227,71 @@ void updateInstructions(int currentTile) {
 
 //ToDo - this looks at the individual pixels in an image. Maybe break the image into tiles, get the average grey of that tile and use that for minimum/maximum purposes.
 //this would prevent a single pitch black/white pixel from skewing the min/max value.
-float determineMaxGrey() {
-  float maxGrey = 0;
+
+void determineGreys() {
+  minGrey = 255;
+  maxGrey = 0;
   float currGrey = 0;
-  for (int i=0; i<img.width*img.height; i++) {
+  float greyCount = 0;
+
+  for (int i = 0; i < img.width*img.height; i++) {
     currGrey = (red(greyImg.pixels[i])+green(greyImg.pixels[i])+blue(greyImg.pixels[i]))/3;
-    if (currGrey>maxGrey)
-      maxGrey=(float)currGrey;
-  }
-  return maxGrey;
+    if (currGrey<minGrey) {
+      minGrey=(float)currGrey;
+    }
+    if (currGrey > maxGrey) {
+      maxGrey = (float)currGrey;
+    }
+    greyCount += currGrey;
+  } 
+
+  avgGrey = (float)greyCount / (img.width * img.height);
+  println("Average Grey is: " + avgGrey);
 }
 
-float determineMinGrey() {
-  float minGrey = 255;
-  float currGrey = 0;
-  for (int i=0; i<img.width*img.height; i++) {
-    currGrey = (red(greyImg.pixels[i])+green(greyImg.pixels[i])+blue(greyImg.pixels[i]))/3;
-    if (currGrey<minGrey)
-      minGrey=(float)currGrey;
+
+int determineBucket(float avgGreyTile) {
+  int currentDiceTile;
+  float increment1, increment2, increment3, increment4, increment5;
+
+  //avgGrey of the whole picture is determined earlier.
+  //We need to take the average - minimum, divide it by 3, and set those to be increments.
+  //Then the max minus the average, divide by 3, set those to be increments.
+  if (weightedBuckets) { 
+    increment1 = ((avgGrey - minGrey) / 3) + minGrey;
+    increment2 = (2 * (avgGrey - minGrey) / 3) + minGrey;
+    increment3 = avgGrey;
+    increment4 = ((maxGrey - avgGrey) / 3) + avgGrey;
+    increment5 = (2 * (maxGrey-avgGrey) / 3) + avgGrey;
+  } else {
+    float increment = (maxGrey-minGrey) / 6;
+    increment1 = increment;
+    increment2 = 2 * increment;
+    increment3 = 3 * increment;
+    increment4 = 4* increment; 
+    increment5 = 5 * increment;
   }
-  return minGrey;
+
+  if (avgGreyTile <= increment1) {
+    currentDiceTile = D6_BUCKET;
+    D6count++;
+  } else if (avgGreyTile <= increment2 && avgGreyTile > increment1) {
+    currentDiceTile = D5_BUCKET;
+    D5count++;
+  } else if (avgGreyTile <= increment3 && avgGreyTile > increment2) {
+    currentDiceTile = D4_BUCKET;
+    D4count++;
+  } else if (avgGreyTile <= increment4 && avgGreyTile > increment3) {
+    currentDiceTile = D3_BUCKET;
+    D3count++;
+  } else if (avgGreyTile <= increment5 && avgGreyTile > increment4) {
+    currentDiceTile = D2_BUCKET;
+    D2count++;
+  } else {
+    currentDiceTile = D1_BUCKET;
+    D1count++;
+  } 
+  return currentDiceTile;
 }
 
 
@@ -266,45 +308,45 @@ void setUpIndividualDiceImages(int diceType) {
 
   switch (diceType) {
   case NORMAL_DICE:
-    d1 = "dice1.png";
-    d2 = "dice2.png";
-    d3 = "dice3.png";
-    d4 = "dice4.png";
-    d5 = "dice5.png";
-    d6 = "dice6.png";
+    d1 = "images/dice1.png";
+    d2 = "images/dice2.png";
+    d3 = "images/dice3.png";
+    d4 = "images/dice4.png";
+    d5 = "images/dice5.png";
+    d6 = "images/dice6.png";
     break;
   case WEIGHTED_DICE:
-    d1 = "dice1weighted.jpg";
-    d2 = "dice2weighted.jpg";
-    d3 = "dice3weighted.jpg";
-    d4 = "dice4weighted.jpg";
-    d5 = "dice5weighted.jpg";
-    d6 = "dice6weighted.jpg";
+    d1 = "images/dice1weighted.jpg";
+    d2 = "images/dice2weighted.jpg";
+    d3 = "images/dice3weighted.jpg";
+    d4 = "images/dice4weighted.jpg";
+    d5 = "images/dice5weighted.jpg";
+    d6 = "images/dice6weighted.jpg";
     break;
   case BLACK_DICE:
-    d1 = "blackDice1.png";
-    d2 = "blackDice2.png";
-    d3 = "blackDice3.png";
-    d4 = "blackDice4.png";
-    d5 = "blackDice5.png";
-    d6 = "blackDice6.png";
+    d1 = "images/blackDice1.png";
+    d2 = "images/blackDice2.png";
+    d3 = "images/blackDice3.png";
+    d4 = "images/blackDice4.png";
+    d5 = "images/blackDice5.png";
+    d6 = "images/blackDice6.png";
     break;
-    case INVERTED_NORMAL:
-    d1 = "dice6.png";
-    d2 = "dice5.png";
-    d3 = "dice4.png";
-    d4 = "dice3.png";
-    d5 = "dice2.png";
-    d6 = "dice1.png";
-    
+  case INVERTED_NORMAL:
+    d1 = "images/dice6.png";
+    d2 = "images/dice5.png";
+    d3 = "images/dice4.png";
+    d4 = "images/dice3.png";
+    d5 = "images/dice2.png";
+    d6 = "images/dice1.png";
+
     break;
   default:
-    d1 = "dice1.png";
-    d2 = "dice2.png";
-    d3 = "dice3.png";
-    d4 = "dice4.png";
-    d5 = "dice5.png";
-    d6 = "dice6.png";
+    d1 = "images/dice1.png";
+    d2 = "images/dice2.png";
+    d3 = "images/dice3.png";
+    d4 = "images/dice4.png";
+    d5 = "images/dice5.png";
+    d6 = "images/dice6.png";
     break;
   }
 
