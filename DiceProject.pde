@@ -1,5 +1,5 @@
 import java.util.*;
-//This project takes in an image titled testImg.jpg which should be saved in the source folder with the PDE as well as seven dice images,
+//This project takes in an image titled source.jpg which should be saved in the source folder with the PDE as well as seven dice images,
 //labeled dice1.jpg, dice2.jpg, etc.
 //It scans the original source image and replaces chunks of it with various number sides of dice, the amount of black on each side of the 
 //dice corresponds to an amount of "grey" in any given chunk of the source image. 
@@ -22,9 +22,9 @@ int D6count = 0;
 final int NORMAL_DICE = 1;
 final int BLACK_DICE = 2;
 final int WEIGHTED_DICE = 3;
-final int INVERTED_NORMAL = 4;
+final int INVERTED_DICE = 4;
 //Set which dice to use here:
-final int DICE_TYPE = NORMAL_DICE;
+final int DICE_TYPE = WEIGHTED_DICE;
 
 //If an image is heavily light/dark, use this to give more detail to light/dark areas
 final boolean weightedBuckets = false;
@@ -62,6 +62,10 @@ void setup() {
   println(numDiceWide + " dice across");
   println(numDiceHigh + " dice tall"); 
   println(numDiceWide * numDiceHigh + " total dice."); 
+  
+  float conversionRatio = 25.4f;
+  println("If using 12mm dice the imperical dimensions are " + (numDiceWide * 12) / conversionRatio +" inches wide x " + (numDiceHigh * 12) / conversionRatio + " inches high.");
+  println("If using 8mm dice the imperical dimensions are " + (numDiceWide * 8) / conversionRatio +" inches wide x " + (numDiceHigh * 8) / conversionRatio + " inches high.");
 
   size(totalWidth, totalHeight, P2D);
 
@@ -172,7 +176,8 @@ void dice() {
     }
   }
 
-  println("Tile Counts: \n"+"D1: " + D1count + "\nD2: "+ D2count + "\nD3: "+ D3count + "\nD4: "+ D4count + "\nD5: " + D5count + "\nD6: " + D6count);
+// Uncomment this line to show how many of each dice are in the image
+//  println("Tile Counts: \n"+"D1: " + D1count + "\nD2: "+ D2count + "\nD3: "+ D3count + "\nD4: "+ D4count + "\nD5: " + D5count + "\nD6: " + D6count);
   updatePixels();
   String[] instructionsArray = split(instructions, " ");
   saveStrings("instructions.txt", instructionsArray);
@@ -182,7 +187,7 @@ void dice() {
 
 
 void updateInstructions(int currentTile) {
-  boolean inverted = DICE_TYPE == INVERTED_NORMAL;
+  boolean inverted = DICE_TYPE == INVERTED_DICE;
 
   switch(currentTile) {
   case D1_BUCKET:
@@ -245,7 +250,7 @@ void determineGreys() {
   } 
 
   avgGrey = (float)greyCount / (img.width * img.height);
-  println("Average Grey is: " + avgGrey);
+//  println("Average Grey is: " + avgGrey);
 }
 
 
@@ -323,14 +328,14 @@ void setUpIndividualDiceImages(int diceType) {
     d6 = "images/dice6weighted.jpg";
     break;
   case BLACK_DICE:
-    d1 = "images/blackDice1.png";
-    d2 = "images/blackDice2.png";
-    d3 = "images/blackDice3.png";
-    d4 = "images/blackDice4.png";
-    d5 = "images/blackDice5.png";
-    d6 = "images/blackDice6.png";
+    d1 = "images/blackDice6.png";
+    d2 = "images/blackDice5.png";
+    d3 = "images/blackDice4.png";
+    d4 = "images/blackDice3.png";
+    d5 = "images/blackDice2.png";
+    d6 = "images/blackDice1.png";
     break;
-  case INVERTED_NORMAL:
+  case INVERTED_DICE:
     d1 = "images/dice6.png";
     d2 = "images/dice5.png";
     d3 = "images/dice4.png";
